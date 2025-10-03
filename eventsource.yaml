@@ -1,0 +1,31 @@
+apiVersion: argoproj.io/v1alpha1
+kind: EventSource
+metadata:
+  name: github
+  namespace: argo-events
+spec:
+  service:
+    ports:
+      - name: git-push
+        port: 12000
+        targetPort: 12000
+  github:
+    git-push:
+      repositories:
+        - owner: jdarguello
+          names:
+            - Spring-Taller6-CuentaBancaria
+            - InversionVirtual
+      webhook:
+        endpoint: /payload
+        port: "12000"
+        method: POST
+      events:
+        - "push"
+      webhookSecret:
+        name: webhook-secret
+        key: secret
+      insecure: true
+      active: true
+      contentType: json
+
