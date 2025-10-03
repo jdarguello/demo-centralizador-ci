@@ -1,0 +1,34 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ClusterWorkflowTemplate
+metadata:
+  name: test-coverage-templates
+spec:
+  templates:
+  - name: gradle-test-coverage
+    inputs:
+      artifacts:
+      - name: clone
+        path: /workspace/repo
+      parameters:
+      - name: project_dir           
+    container:
+      image: gradle:jdk21-corretto-al2023
+      workingDir: /workspace/repo
+      volumeMounts:
+        - name: workspace               
+          mountPath: /workspace
+      env:
+        - name: SONAR_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: sonar-creds       
+              key: token
+      command: [sh, -euxc]
+      args:
+        - |
+          cd {{inputs.parameters.project_dir}}
+          ./gradlew clean test jacocoTestReport sonarqube --info
+    outputs:
+      artifacts:
+        - name: reporte-cobertura
+          path: /workspace/repo/{{inputs.parameters.project_dir}}/build/reports/jacoco/test/jacocoTestReport.xml

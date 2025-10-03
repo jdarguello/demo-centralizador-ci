@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: pipeline-build-
+  namespace: argo
+spec:
+  serviceAccountName: argo-workflow
+  entrypoint: pipeline-build
+  arguments:
+    parameters:
+      - name: repo_url
+      - name: revision
+  volumes:
+    - name: workspace
+      emptyDir: {}
+    - name: podman-lib
+      emptyDir: {}
+  templates:
+    - name: pipeline-build
+      dag:
+        tasks:
+          - name: clone
+            templateRef:
+              name: git-clone-template
+              template: git-clone
+              clusterScope: true
+            arguments:
+              parameters:
+                - name: repo_url
+                  value: "{{workflow.parameters.repo_url}}"
+                - name: revision
+                  value: "{{workflow.parameters.revision}}"
+
